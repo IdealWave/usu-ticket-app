@@ -1,0 +1,904 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Ticket Desk</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: Arial, Helvetica, sans-serif;
+        background: #f5f7fa;
+        color: #17202a;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: #f5f7fa;
+      }
+
+      button,
+      input,
+      textarea,
+      select {
+        font: inherit;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin: 0;
+      }
+
+      .shell {
+        width: min(1280px, calc(100% - 32px));
+        margin: 0 auto;
+        padding: 28px 0 40px;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 22px;
+        border-bottom: 1px solid #d8e0ea;
+        padding-bottom: 18px;
+      }
+
+      h1 {
+        font-size: clamp(26px, 4vw, 38px);
+        line-height: 1.1;
+        letter-spacing: 0;
+      }
+
+      .counter {
+        border: 1px solid #cfd9e6;
+        border-radius: 6px;
+        background: #ffffff;
+        padding: 9px 12px;
+        font-weight: 700;
+        color: #31455a;
+      }
+
+      .message {
+        margin-bottom: 18px;
+        border-radius: 6px;
+        padding: 12px 14px;
+        line-height: 1.45;
+      }
+
+      .success {
+        border: 1px solid #8bd3a5;
+        background: #e9f8ef;
+        color: #186334;
+      }
+
+      .error {
+        border: 1px solid #eeaaa3;
+        background: #fff1ef;
+        color: #982316;
+      }
+
+      .info {
+        border: 1px solid #9ec5fe;
+        background: #edf5ff;
+        color: #234f86;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: minmax(300px, 390px) minmax(0, 1fr);
+        gap: 22px;
+        align-items: start;
+      }
+
+      .tool-panel,
+      .list-panel {
+        border: 1px solid #d8e0ea;
+        border-radius: 8px;
+        background: #ffffff;
+      }
+
+      .tool-panel {
+        padding: 20px;
+        position: sticky;
+        top: 18px;
+      }
+
+      .list-panel {
+        padding: 18px;
+      }
+
+      .panel-head,
+      .ticket-title-row,
+      .detail-head,
+      .section-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .panel-head {
+        align-items: center;
+        margin-bottom: 16px;
+      }
+
+      .panel-title {
+        font-size: 19px;
+        line-height: 1.2;
+      }
+
+      .ticket-form,
+      .filters,
+      .status-form,
+      .comment-form {
+        display: grid;
+        gap: 14px;
+      }
+
+      .filters {
+        grid-template-columns: minmax(180px, 1.4fr) repeat(3, minmax(130px, 1fr)) auto auto;
+        align-items: end;
+        margin-bottom: 18px;
+        border-bottom: 1px solid #e1e7ee;
+        padding-bottom: 18px;
+      }
+
+      label {
+        display: grid;
+        gap: 7px;
+        font-weight: 700;
+        color: #26384a;
+      }
+
+      input,
+      textarea,
+      select {
+        width: 100%;
+        border: 1px solid #bdcad8;
+        border-radius: 6px;
+        padding: 10px 11px;
+        color: #17202a;
+        background: #ffffff;
+      }
+
+      input:focus,
+      textarea:focus,
+      select:focus {
+        outline: 3px solid #cfe1ff;
+        border-color: #2f6fdd;
+      }
+
+      textarea {
+        min-height: 132px;
+        resize: vertical;
+      }
+
+      .compact-textarea {
+        min-height: 82px;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 40px;
+        border: 1px solid transparent;
+        border-radius: 6px;
+        padding: 9px 14px;
+        font-weight: 700;
+        line-height: 1.15;
+        cursor: pointer;
+        background: transparent;
+      }
+
+      .button[disabled] {
+        cursor: wait;
+        opacity: 0.68;
+      }
+
+      form.is-loading input,
+      form.is-loading textarea,
+      form.is-loading select {
+        pointer-events: none;
+      }
+
+      .primary {
+        color: #ffffff;
+        background: #235fb6;
+      }
+
+      .primary:hover {
+        background: #1b4f99;
+      }
+
+      .secondary {
+        color: #24384f;
+        background: #eef3f8;
+        border-color: #cbd7e4;
+      }
+
+      .secondary:hover {
+        background: #e2eaf3;
+      }
+
+      .danger {
+        color: #ffffff;
+        background: #b83228;
+      }
+
+      .danger:hover {
+        background: #97281f;
+      }
+
+      .quiet {
+        color: #43566b;
+        border-color: #d3dce6;
+        background: #ffffff;
+      }
+
+      .ticket-list {
+        display: grid;
+        gap: 12px;
+      }
+
+      .ticket-card {
+        display: grid;
+        gap: 12px;
+        border: 1px solid #d8e0ea;
+        border-left: 5px solid #2f6fdd;
+        border-radius: 8px;
+        padding: 15px;
+        background: #ffffff;
+      }
+
+      .ticket-card.status-in-progress {
+        border-left-color: #d38324;
+      }
+
+      .ticket-card.status-resolved {
+        border-left-color: #287d4f;
+      }
+
+      .ticket-card.status-closed {
+        border-left-color: #707c8c;
+        background: #fafbfc;
+      }
+
+      .ticket-title {
+        font-size: 18px;
+        line-height: 1.25;
+      }
+
+      .badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 7px;
+        align-items: center;
+        justify-content: flex-end;
+      }
+
+      .badge {
+        flex: 0 0 auto;
+        border-radius: 999px;
+        padding: 5px 9px;
+        font-size: 13px;
+        font-weight: 700;
+        background: #edf0f3;
+        color: #4b5563;
+      }
+
+      .status-open {
+        background: #e8f4ff;
+        color: #1d5d96;
+      }
+
+      .status-in-progress {
+        background: #fff2df;
+        color: #8a4d12;
+      }
+
+      .status-resolved {
+        background: #e6f5ec;
+        color: #17623a;
+      }
+
+      .status-closed {
+        background: #edf0f3;
+        color: #4b5563;
+      }
+
+      .priority-low {
+        background: #edf7ed;
+        color: #28632d;
+      }
+
+      .priority-medium {
+        background: #edf5ff;
+        color: #23527f;
+      }
+
+      .priority-high {
+        background: #fff3de;
+        color: #895316;
+      }
+
+      .priority-critical {
+        background: #fff1ef;
+        color: #9b261b;
+      }
+
+      .meta,
+      .detail-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 14px;
+        color: #516172;
+        font-size: 14px;
+      }
+
+      .description {
+        color: #26384a;
+        line-height: 1.5;
+        white-space: pre-wrap;
+      }
+
+      .empty {
+        border: 1px dashed #bcc8d6;
+        border-radius: 8px;
+        padding: 30px 16px;
+        text-align: center;
+        color: #586a7d;
+        background: #fbfcfe;
+      }
+
+      .detail {
+        display: grid;
+        gap: 18px;
+        margin-bottom: 20px;
+        border-bottom: 1px solid #e1e7ee;
+        padding-bottom: 20px;
+      }
+
+      .detail-title {
+        font-size: 23px;
+        line-height: 1.2;
+      }
+
+      .detail-description {
+        border: 1px solid #e1e7ee;
+        border-radius: 8px;
+        padding: 14px;
+        background: #fbfcfe;
+      }
+
+      .detail-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .fact {
+        display: grid;
+        gap: 4px;
+        border-top: 1px solid #e7edf3;
+        padding-top: 10px;
+      }
+
+      .fact span {
+        color: #647487;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .fact strong {
+        color: #26384a;
+        font-size: 15px;
+      }
+
+      .work-area {
+        display: grid;
+        grid-template-columns: minmax(240px, 1fr) minmax(260px, 1fr);
+        gap: 18px;
+      }
+
+      .subsection {
+        display: grid;
+        gap: 12px;
+      }
+
+      .subsection h3 {
+        font-size: 16px;
+      }
+
+      .status-actions {
+        display: grid;
+        gap: 12px;
+      }
+
+      .inline-form {
+        display: grid;
+        grid-template-columns: minmax(140px, 1fr) auto;
+        gap: 10px;
+        align-items: end;
+      }
+
+      .reopen-form {
+        display: grid;
+        grid-template-columns: minmax(120px, 0.8fr) minmax(180px, 1.2fr) auto;
+        gap: 10px;
+        align-items: end;
+      }
+
+      .comment,
+      .history-item {
+        display: grid;
+        gap: 6px;
+        border-top: 1px solid #e7edf3;
+        padding-top: 11px;
+      }
+
+      .comment:first-child,
+      .history-item:first-child {
+        border-top: 0;
+        padding-top: 0;
+      }
+
+      .item-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        color: #516172;
+        font-size: 14px;
+      }
+
+      .item-head strong {
+        color: #26384a;
+      }
+
+      .field-change {
+        color: #31455a;
+        font-size: 14px;
+        line-height: 1.4;
+      }
+
+      @media (max-width: 1050px) {
+        .filters {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .work-area {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 780px) {
+        .shell {
+          width: min(100% - 24px, 1180px);
+          padding-top: 18px;
+        }
+
+        .topbar,
+        .ticket-title-row,
+        .detail-head,
+        .section-head {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .layout,
+        .detail-grid,
+        .filters,
+        .inline-form,
+        .reopen-form {
+          grid-template-columns: 1fr;
+        }
+
+        .tool-panel {
+          position: static;
+        }
+
+        .badges {
+          justify-content: flex-start;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    {% set current = edit_ticket or form_data %}
+    {% set current_created_by = current.created_by or ((current.first_name or '') ~ ' ' ~ (current.last_name or ''))|trim %}
+    <main class="shell">
+      <header class="topbar">
+        <h1>Ticket Desk</h1>
+        <div class="counter">{{ tickets|length }} ticket{{ '' if tickets|length == 1 else 's' }}</div>
+      </header>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="message {{ category }}" role="status">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <div class="layout">
+        <section class="tool-panel" aria-labelledby="ticket-form-title">
+          <div class="panel-head">
+            <h2 class="panel-title" id="ticket-form-title">
+              {{ 'Edit Ticket' if edit_ticket else 'Create Ticket' }}
+            </h2>
+          </div>
+
+          <form
+            class="ticket-form"
+            method="post"
+            action="{{ url_for('update_ticket_form', ticket_id=edit_ticket.id) if edit_ticket else url_for('create_ticket') }}"
+          >
+            <label>
+              Ticket title
+              <input type="text" name="title" value="{{ current.title or '' }}" required>
+            </label>
+
+            <label>
+              Category
+              <input type="text" name="category" value="{{ current.category or 'General' }}" required>
+            </label>
+
+            <label>
+              Priority
+              <select name="priority" required>
+                {% for priority in priorities %}
+                  <option value="{{ priority }}" {% if (current.priority or 'Medium') == priority %}selected{% endif %}>
+                    {{ priority }}
+                  </option>
+                {% endfor %}
+              </select>
+            </label>
+
+            <label>
+              Details
+              <textarea name="description" required>{{ current.description or '' }}</textarea>
+            </label>
+
+            <label>
+              Created by
+              <input type="text" name="created_by" value="{{ current_created_by or '' }}" required>
+            </label>
+
+            <label>
+              Assigned to
+              <input type="text" name="assigned_to" value="{{ current.assigned_to or '' }}">
+            </label>
+
+            {% if edit_ticket %}
+              <label>
+                Change made by
+                <input type="text" name="actor" value="{{ current_created_by or '' }}" required>
+              </label>
+            {% endif %}
+
+            <div class="actions">
+              <button class="button primary" type="submit" data-loading-text="Saving...">
+                {{ 'Save Changes' if edit_ticket else 'Create Ticket' }}
+              </button>
+
+              {% if edit_ticket %}
+                <a class="button secondary" href="{{ url_for('ticket_detail', ticket_id=edit_ticket.id) }}">Cancel</a>
+              {% endif %}
+            </div>
+          </form>
+        </section>
+
+        <section class="list-panel" aria-labelledby="tickets-title">
+          <div class="panel-head">
+            <h2 class="panel-title" id="tickets-title">Tickets</h2>
+          </div>
+
+          <form class="filters" method="get" action="{{ url_for('tickets_view') }}">
+            <label>
+              Search
+              <input type="search" name="search" value="{{ filters.search }}" placeholder="Title or ID">
+            </label>
+
+            <label>
+              Status
+              <select name="status">
+                <option value="">All statuses</option>
+                {% for status in statuses %}
+                  <option value="{{ status }}" {% if filters.status == status %}selected{% endif %}>{{ status }}</option>
+                {% endfor %}
+              </select>
+            </label>
+
+            <label>
+              Priority
+              <select name="priority">
+                <option value="">All priorities</option>
+                {% for priority in priorities %}
+                  <option value="{{ priority }}" {% if filters.priority == priority %}selected{% endif %}>{{ priority }}</option>
+                {% endfor %}
+              </select>
+            </label>
+
+            <label>
+              Created date
+              <input type="date" name="date" value="{{ filters.date }}">
+            </label>
+
+            <button class="button primary" type="submit" data-loading-text="Filtering...">Filter</button>
+            <a class="button secondary" href="{{ url_for('tickets_view') }}">Clear</a>
+          </form>
+
+          {% if detail_ticket %}
+            <section class="detail" aria-labelledby="detail-title">
+              <div class="detail-head">
+                <h2 class="detail-title" id="detail-title">#{{ detail_ticket.id }} {{ detail_ticket.title }}</h2>
+                <div class="badges">
+                  <span class="badge status-{{ detail_ticket.status|status_class }}">{{ detail_ticket.status }}</span>
+                  <span class="badge priority-{{ detail_ticket.priority|priority_class }}">{{ detail_ticket.priority }}</span>
+                </div>
+              </div>
+
+              <div class="detail-meta">
+                <span>Category: {{ detail_ticket.category }}</span>
+                <span>Created {{ detail_ticket.created_at|format_datetime }}</span>
+                <span>Updated {{ detail_ticket.updated_at|format_datetime }}</span>
+                {% if detail_ticket.closed_at %}
+                  <span>Closed {{ detail_ticket.closed_at|format_datetime }}</span>
+                {% endif %}
+              </div>
+
+              <p class="description detail-description">{{ detail_ticket.description }}</p>
+
+              <div class="detail-grid">
+                <div class="fact">
+                  <span>Created by</span>
+                  <strong>{{ detail_ticket.created_by }}</strong>
+                </div>
+                <div class="fact">
+                  <span>Assigned to</span>
+                  <strong>{{ detail_ticket.assigned_to or 'Unassigned' }}</strong>
+                </div>
+                <div class="fact">
+                  <span>Status</span>
+                  <strong>{{ detail_ticket.status }}</strong>
+                </div>
+                <div class="fact">
+                  <span>Priority</span>
+                  <strong>{{ detail_ticket.priority }}</strong>
+                </div>
+              </div>
+
+              <div class="actions">
+                <a class="button secondary" href="{{ url_for('edit_ticket', ticket_id=detail_ticket.id) }}">Edit</a>
+                <a class="button quiet" href="{{ url_for('ticket_status', ticket_id=detail_ticket.id) }}">Status JSON</a>
+                <form
+                  method="post"
+                  action="{{ url_for('delete_ticket_form', ticket_id=detail_ticket.id) }}"
+                  onsubmit="return confirm('Delete this ticket? This cannot be undone.');"
+                >
+                  <input type="hidden" name="confirm" value="true">
+                  <input type="hidden" name="actor" value="{{ detail_ticket.created_by }}">
+                  <button class="button danger" type="submit" data-loading-text="Deleting...">Delete</button>
+                </form>
+              </div>
+
+              <div class="work-area">
+                <section class="subsection" aria-labelledby="status-actions-title">
+                  <div class="section-head">
+                    <h3 id="status-actions-title">Status</h3>
+                  </div>
+
+                  <div class="status-actions">
+                    {% if detail_ticket.status == 'Open' %}
+                      <form class="inline-form" method="post" action="{{ url_for('update_ticket_status_form', ticket_id=detail_ticket.id) }}">
+                        <input type="hidden" name="status" value="In Progress">
+                        <label>
+                          Changed by
+                          <input type="text" name="actor" value="{{ detail_ticket.assigned_to or detail_ticket.created_by }}" required>
+                        </label>
+                        <button class="button primary" type="submit" data-loading-text="Updating...">Change Status</button>
+                      </form>
+                    {% elif detail_ticket.status == 'In Progress' %}
+                      <form class="inline-form" method="post" action="{{ url_for('update_ticket_status_form', ticket_id=detail_ticket.id) }}">
+                        <input type="hidden" name="status" value="Resolved">
+                        <label>
+                          Changed by
+                          <input type="text" name="actor" value="{{ detail_ticket.assigned_to or detail_ticket.created_by }}" required>
+                        </label>
+                        <button class="button primary" type="submit" data-loading-text="Updating...">Change Status</button>
+                      </form>
+                    {% elif detail_ticket.status == 'Resolved' %}
+                      <form class="inline-form" method="post" action="{{ url_for('close_ticket', ticket_id=detail_ticket.id) }}">
+                        <label>
+                          Closed by
+                          <input type="text" name="actor" value="{{ detail_ticket.assigned_to or detail_ticket.created_by }}" required>
+                        </label>
+                        <button class="button danger" type="submit" data-loading-text="Closing...">Close Ticket</button>
+                      </form>
+
+                      <form class="reopen-form" method="post" action="{{ url_for('update_ticket_status_form', ticket_id=detail_ticket.id) }}">
+                        <input type="hidden" name="status" value="Open">
+                        <label>
+                          Reopened by
+                          <input type="text" name="actor" value="{{ detail_ticket.created_by }}" required>
+                        </label>
+                        <label>
+                          Reason
+                          <input type="text" name="reason" required>
+                        </label>
+                        <button class="button secondary" type="submit" data-loading-text="Reopening...">Change Status</button>
+                      </form>
+                    {% elif detail_ticket.status == 'Closed' %}
+                      <form class="reopen-form" method="post" action="{{ url_for('update_ticket_status_form', ticket_id=detail_ticket.id) }}">
+                        <input type="hidden" name="status" value="Open">
+                        <label>
+                          Reopened by
+                          <input type="text" name="actor" value="{{ detail_ticket.created_by }}" required>
+                        </label>
+                        <label>
+                          Reason
+                          <input type="text" name="reason" required>
+                        </label>
+                        <button class="button secondary" type="submit" data-loading-text="Reopening...">Change Status</button>
+                      </form>
+                    {% endif %}
+                  </div>
+                </section>
+
+                <section class="subsection" aria-labelledby="comments-title">
+                  <div class="section-head">
+                    <h3 id="comments-title">Comments</h3>
+                  </div>
+
+                  <form class="comment-form" method="post" action="{{ url_for('create_comment', ticket_id=detail_ticket.id) }}">
+                    <label>
+                      Author
+                      <input type="text" name="author" value="{{ detail_ticket.assigned_to or detail_ticket.created_by }}" required>
+                    </label>
+                    <label>
+                      Note
+                      <textarea class="compact-textarea" name="body" required></textarea>
+                    </label>
+                    <button class="button primary" type="submit" data-loading-text="Adding...">Add Comment</button>
+                  </form>
+
+                  {% if detail_ticket.comments %}
+                    {% for comment in detail_ticket.comments %}
+                      <article class="comment">
+                        <div class="item-head">
+                          <strong>{{ comment.author }}</strong>
+                          <span>{{ comment.created_at|format_datetime }}</span>
+                        </div>
+                        <p class="description">{{ comment.body }}</p>
+                      </article>
+                    {% endfor %}
+                  {% else %}
+                    <div class="empty">No comments yet.</div>
+                  {% endif %}
+                </section>
+              </div>
+
+              <section class="subsection" aria-labelledby="history-title">
+                <div class="section-head">
+                  <h3 id="history-title">History</h3>
+                  <a class="button quiet" href="{{ url_for('ticket_history', ticket_id=detail_ticket.id) }}">JSON</a>
+                </div>
+
+                {% if detail_ticket.history %}
+                  {% for item in detail_ticket.history %}
+                    <article class="history-item">
+                      <div class="item-head">
+                        <strong>{{ item.actor }}</strong>
+                        <span>{{ item.created_at|format_datetime }}</span>
+                      </div>
+                      <p class="field-change">
+                        {{ item.action|replace('_', ' ')|title }}
+                        {% if item.field %}
+                          / {{ item.field }}
+                        {% endif %}
+                        {% if item.old_value or item.new_value %}
+                          : {{ item.old_value or '' }}{% if item.new_value %} -> {{ item.new_value }}{% endif %}
+                        {% endif %}
+                      </p>
+                      {% if item.note %}
+                        <p class="description">{{ item.note }}</p>
+                      {% endif %}
+                    </article>
+                  {% endfor %}
+                {% else %}
+                  <div class="empty">No history yet.</div>
+                {% endif %}
+              </section>
+            </section>
+          {% endif %}
+
+          {% if tickets %}
+            <div class="ticket-list">
+              {% for ticket in tickets %}
+                <article class="ticket-card status-{{ ticket.status|status_class }}">
+                  <div class="ticket-title-row">
+                    <h3 class="ticket-title">#{{ ticket.id }} {{ ticket.title }}</h3>
+                    <div class="badges">
+                      <span class="badge status-{{ ticket.status|status_class }}">{{ ticket.status }}</span>
+                      <span class="badge priority-{{ ticket.priority|priority_class }}">{{ ticket.priority }}</span>
+                    </div>
+                  </div>
+
+                  <div class="meta">
+                    <span>{{ ticket.category }}</span>
+                    <span>Created by {{ ticket.created_by }}</span>
+                    <span>Assigned to {{ ticket.assigned_to or 'Unassigned' }}</span>
+                    <span>Updated {{ ticket.updated_at|format_datetime }}</span>
+                  </div>
+
+                  <p class="description">{{ ticket.description }}</p>
+
+                  <div class="actions">
+                    <a class="button primary" href="{{ url_for('ticket_detail', ticket_id=ticket.id) }}">Details</a>
+                    <a class="button secondary" href="{{ url_for('edit_ticket', ticket_id=ticket.id) }}">Edit</a>
+                    <form
+                      method="post"
+                      action="{{ url_for('delete_ticket_form', ticket_id=ticket.id) }}"
+                      onsubmit="return confirm('Delete this ticket? This cannot be undone.');"
+                    >
+                      <input type="hidden" name="confirm" value="true">
+                      <input type="hidden" name="actor" value="{{ ticket.created_by }}">
+                      <button class="button danger" type="submit" data-loading-text="Deleting...">Delete</button>
+                    </form>
+                  </div>
+                </article>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="empty">No tickets found.</div>
+          {% endif %}
+        </section>
+      </div>
+    </main>
+    <script>
+      document.querySelectorAll("form").forEach((form) => {
+        form.addEventListener("submit", (event) => {
+          if (event.defaultPrevented) {
+            return;
+          }
+
+          window.requestAnimationFrame(() => {
+            if (event.defaultPrevented) {
+              return;
+            }
+
+            const button = form.querySelector("button[type='submit']");
+            if (!button) {
+              return;
+            }
+
+            button.disabled = true;
+            button.textContent = button.dataset.loadingText || "Working...";
+            form.classList.add("is-loading");
+          });
+        });
+      });
+    </script>
+  </body>
+</html>
